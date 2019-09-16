@@ -3,6 +3,7 @@ using System.Linq;
 using SamuraiApp.Domain;
 using SamuraiApp.Data;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
 
 namespace SomeUI
 {
@@ -21,6 +22,10 @@ namespace SomeUI
             //QueryAndUpdateBattle_Disconnected();
             //AddMoreSamurais();
             //DeleteMany();
+            //InsertNewPkFkGraph();
+            //InsertNewPkFkGraphMultipleChildren();
+            //AddChildToExistingObjectWhileTracked();
+            //AddChildToExistingObjectWhileNotTracked(1);
             Console.WriteLine("Press any key to stop...");
             Console.ReadKey();
         }
@@ -156,6 +161,157 @@ namespace SomeUI
             var samurai = _ctx.Samurais.Find(samuraiId);
             _ctx.Remove(samurai);
             _ctx.SaveChanges();
+            // alternate: call a stored procedure!
+            // _ctx.Database.ExecuteSqlCommand("exec DeleteById {0}", samuraiId);
+        }
+
+        private static void InsertNewPkFkGraph()
+        {
+            var samurai = new Samurai
+            {
+                Name = "Kambei Shimada",
+                Quotes = new List<Quote>
+                {
+                    new Quote {Text = "I've come to save you"}
+                }
+            };
+            _ctx.Samurais.Add(samurai);
+            _ctx.SaveChanges();
+        }
+
+        private static void InsertNewPkFkGraphMultipleChildren()
+        {
+            var samurai = new Samurai
+            {
+                Name = "Kyūzō",
+                Quotes = new List<Quote>
+                {
+                    new Quote { Text = "Watch out for my sharp sword! "},
+                    new Quote { Text = "I told you to watch out for the sharp sword! Oh well! "}
+                }
+            };
+            _ctx.Samurais.Add(samurai);
+            _ctx.SaveChanges();
+        }
+
+        private static void AddChildToExistingObjectWhileTracked()
+        {
+            var samurai = _ctx.Samurais.First();
+            samurai.Quotes.Add(new Quote
+            {
+                Text = "I bet you're happy that I've saved you!"
+            });
+            _ctx.SaveChanges();
+        }
+
+        private static void AddChildToExistingObjectWhileNotTracked(int samuraiId)
+        {
+            var quote = new Quote
+            {
+                Text = "Now that I saved you, will you feed me dinner?",
+                SamuraiId = samuraiId
+            };
+            using (var _newCtx = new SamuraiContext())
+            {
+                _newCtx.Quotes.Add(quote);
+                _newCtx.SaveChanges();
+            }
+        }
+
+        private static void EagerLoadSamuraiWithQuotes()
+        {
+            // Return rich objects graphs, always loading the entire set of related objects. The execution is done with 2 queries:
+            // 1. Gather a filtered list of samurais to avoid duplicates
+            // 2. Gather the quotes from the recovered and filtered list of samurais, doing an inner join
+            var samuraiWithQuotes = _ctx.Samurais.Include(s => s.Quotes).ToList();
+            // Filtered samurais example
+            var samuraiWithQuotes2 = _ctx.Samurais
+                .Where(s => s.Name.Contains("Julie"))
+                .Include(s => s.Quotes).ToList();
+            // Filtered samurais example with grandchildren leveraging the usage of .ThenInclude
+            //var samuraiWithQuotes3 = _ctx.Samurais
+            //    .Where(s => s.Name.Contains("Julie"))
+            //    .Include(s => s.Quotes)
+            //    .ThenInclude(q => q.Translations)
+            //    .ToList();
+            // Multiple includes are allowed as well
+            var samuraiWithQuotes4 = _ctx.Samurais
+                .Where(s => s.Name.Contains("Julie"))
+                .Include(s => s.Quotes)
+                .Include(s => s.SecretIdentity)
+                .FirstOrDefault();
+        }
+
+        public struct IdAndName
+        {
+            public IdAndName(int id, string name)
+            {
+                Id = id;
+                Name = name;
+            }
+            public int Id;
+            public string Name;
+        }
+
+        private static List<dynamic> ProjectSomeProperties()
+        {
+            // Returning multiple properties passing an anonymous type
+            var someProperties = _ctx.Samurais.Select(s => new { s.Id, s.Name }).ToList();
+            // Passing a defined type
+            var someProperties2 = _ctx.Samurais.Select(s => new IdAndName(s.Id, s.Name)).ToList();
+            return someProperties.ToList<dynamic>();
+        }
+
+        private static void ProjectSamuraisWithQuotes()
+        {
+            var someProperties = _ctx.Samurais.Select(s => new { s.Id, s.Name, s.Quotes }).ToList();  // Complete type search return
+            var someProperties2 = _ctx.Samurais.Select(s => new { s.Id, s.Name, s.Quotes.Count }).ToList();
+            var somePropertiesWithSomeQuotes = _ctx.Samurais
+                .Select(s => new { s.Id, s.Name, HappyQuotes = s.Quotes.Where(q => q.Text.Contains("happy")) })  // Filter inner properties is possible as well
+                .ToList();
+            // Filter related objects with full types: enabling compositions in .NET
+            //var samuraisWithHappyQuotes = _ctx.Samurais
+            //    .Select(s => new
+            //    {
+            //        Samurai = s,
+            //        Quotes = s.Quotes.Where(q => q.Text.Contains("happy")).ToList()
+            //    })
+            //    .ToList();
+            // Unfortunately, EF Core projections don't connect graphs on this version:
+            // - Projected collection navigations don't get tracked if the collection is composed (https://github.com/aspnet/EntityFrameworkCore/issues/8999)
+            // Therefore, two separate queries are needed to accomplish such a thing, and EF Core will attach the related data connections automatically.
+            var samurais = _ctx.Samurais.ToList();
+            var happyQuotes = _ctx.Quotes.Where(q => q.Text.Contains("happy")).ToList();
+        }
+
+        private static void FilteringWithRelatedData()
+        {
+            // Creates a WHERE EXISTS query to filter objects using related data WHERE LINQ method query
+            var samurais = _ctx.Samurais
+                .Where(s => s.Quotes.Any(q => q.Text.Contains("happy")))
+                .ToList();
+        }
+
+        private static void ModifyingRelatedDataWhenTracked()
+        {
+            var samurai = _ctx.Samurais.Include(s => s.Quotes).FirstOrDefault();
+            //samurai.Quotes[0].Text += " Did you hear that?";  // UPDATE SQL Query
+            _ctx.Quotes.Remove(samurai.Quotes[2]);  // REMOVE SQL Query
+            _ctx.SaveChanges();
+        }
+
+        private static void ModifyingRelatedDataWhenNotTracked()
+        {
+            var samurai = _ctx.Samurais.Include(s => s.Quotes).FirstOrDefault();
+            var quote = samurai.Quotes[0];
+            quote.Text += " Did you hear that?";
+            using (var _newCtx = new SamuraiContext())
+            {
+                // DbSet native method, which keeps track of all graph related entities
+                //_newCtx.Quotes.Update(quote);
+                _newCtx.Entry(quote).State = EntityState.Modified;
+                _newCtx.SaveChanges();
+            }
         }
     }
 }
