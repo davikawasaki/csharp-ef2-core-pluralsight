@@ -310,8 +310,19 @@ namespace SomeUI
                 // DbSet native method, which keeps track of all graph related entities
                 //_newCtx.Quotes.Update(quote);
                 _newCtx.Entry(quote).State = EntityState.Modified;
+                // Explicit loading (requesting related data of objects in memory)
+                //_newCtx.Entry(samurai).Reference(s => s.SecretIdentity).Load();  // Reference method loads a reference navigation property
+                //_newCtx.Entry(samurai).Collection(s => s.Quotes).Load();
                 _newCtx.SaveChanges();
             }
+        }
+
+        private static bool CheckChangesNeedToBeSaved()
+        {
+            return _ctx.ChangeTracker.Entries()
+                .Any(e => e.State == EntityState.Added
+                    | e.State == EntityState.Modified
+                    | e.State == EntityState.Deleted);
         }
     }
 }

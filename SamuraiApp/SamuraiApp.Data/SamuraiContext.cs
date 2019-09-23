@@ -2,12 +2,14 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Console;
 using SamuraiApp.Domain;
-using System.Collections.Generic;
 
 namespace SamuraiApp.Data
 {
     public class SamuraiContext : DbContext
     {
+        public SamuraiContext() { }
+        public SamuraiContext(DbContextOptions<SamuraiContext> options) : base(options) { }
+
         public static readonly LoggerFactory MyConsoleLoggerFactory = new LoggerFactory(new[]
         {
             new ConsoleLoggerProvider((category, level) =>
@@ -20,9 +22,17 @@ namespace SamuraiApp.Data
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
+            // For WPF applications
+            //var connectionString = ConfigurationManager.ConnectionStrings["WPFDatabase"].ToString();
+            //optionsBuilder
+            //    .UseLoggerFactory(MyConsoleLoggerFactory)
+            //    .EnableSensitiveDataLogging(true)
+            //    .UseSqlServer(connectionString);
+
+            // For normal console applications
             optionsBuilder
                 .UseLoggerFactory(MyConsoleLoggerFactory)
-                //.EnableSensitiveDataLogging(true)
+                .EnableSensitiveDataLogging(true)
                 .UseSqlServer("Server = (localdb)\\mssqllocaldb; Database = SamuraiAppData; Trusted_Connection = True; ");
         }
 
