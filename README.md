@@ -4,8 +4,8 @@ Entity Framework Core courses code that was written throughout Pluralsight cours
 
 ## Table of Contents
 
-1. [Entity Framework Core 2: Getting Started](https://app.pluralsight.com/library/courses/entity-framework-core-2-getting-started)
-2. [Entity Framework Core 2: Mappings](https://app.pluralsight.com/library/courses/e-f-core-2-beyond-the-basics-mappings)
+1. [Entity Framework Core 2: Getting Started](#entity-framework-core-2-getting-started)
+2. [Entity Framework Core 2: Mappings](#entity-framework-core-2-mappings)
 3. [Relevant Commands](#relevant-commands)
 4. [Relevant Links](#relevant-links)
 
@@ -13,7 +13,10 @@ Entity Framework Core courses code that was written throughout Pluralsight cours
 
 - [Course](https://app.pluralsight.com/library/courses/entity-framework-core-2-getting-started)
 - [Repository](https://github.com/davikawasaki/csharp-ef2-core-pluralsight/tree/master/SamuraiAppEFCoreGettingStarted)
-- [Classes Notes](https://github.com/davikawasaki/csharp-ef2-core-pluralsight/blob/master/SamuraiApp/Notes.csv)
+- [Classes Notes](https://github.com/davikawasaki/csharp-ef2-core-pluralsight/blob/master/SamuraiAppEFCoreGettingStarted/Notes.csv)
+
+## Entity Framework Core 2 Mappings
+- [Course](https://app.pluralsight.com/library/courses/e-f-core-2-beyond-the-basics-mappings)
 
 ## Relevant Commands
 
