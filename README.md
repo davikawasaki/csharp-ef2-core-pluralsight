@@ -9,6 +9,12 @@ Entity Framework Core courses code that was written throughout Pluralsight cours
 3. [Relevant Commands](#relevant-commands)
 4. [Relevant Links](#relevant-links)
 
+## Entity Framework Core 2 Getting Started
+
+- [Course](https://app.pluralsight.com/library/courses/entity-framework-core-2-getting-started)
+- [Repository](https://github.com/davikawasaki/csharp-ef2-core-pluralsight/tree/master/SamuraiAppEFCoreGettingStarted)
+- [Classes Notes](https://github.com/davikawasaki/csharp-ef2-core-pluralsight/blob/master/SamuraiApp/Notes.csv)
+
 ## Relevant Commands
 
 - Getting a list of EF Core command-line options (run in Package Manager Console):
